@@ -38,8 +38,15 @@ This endpoint deletes an action in the form of
 
 For installation of Go. https://golang.org/doc/install
 
+The default port this runs is on 6656. The port can be changed during runtime with setting the environment variable JRPORT
+
 To Run the application
 ```html
 go build main.go
-
+./main
 ```
+
+##Usage
+
+After the application runs, the URL can be accessed via CURL or a tool like Postman.
+
