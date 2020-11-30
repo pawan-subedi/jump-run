@@ -7,10 +7,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 const MAXTIME = 10000 //Max supported time
-const DEFAULTPORT = ":6656"
+const DEFAULTPORT = "6656"
 
 var actionMap = make(map[string]Stat) //This is a global variable that will hold the data. If we want to make it persistent, we can use a DB library instead.
 
@@ -38,21 +39,23 @@ type DeleteResponse struct {
 }
 
 func main() {
-	port := ":" + string(os.Getenv("JRPORT"))
-	if port == "" {
+	var port = os.Getenv("JRPORT")
+	_, err := strconv.Atoi(port)
+	if err != nil {
 		port = DEFAULTPORT
 	}
+	port = ":" + port
 	fmt.Println("Running on port " + port)
 	//go http takes cares of concurrency. Each request is spawned in a sub-routine
 	router := mux.NewRouter()
 
-	router.HandleFunc("/stats", getStats).Methods("GET")
-	router.HandleFunc("/action", addAction).Methods("POST")
-	router.HandleFunc("/delete", removeAction).Methods("POST")
+	router.HandleFunc("/stats", GetStats).Methods("GET")
+	router.HandleFunc("/action", AddAction).Methods("POST")
+	router.HandleFunc("/delete", RemoveAction).Methods("POST")
 	log.Fatal(http.ListenAndServe(port, router))
 }
 
-func getStats(w http.ResponseWriter, r *http.Request) {
+func GetStats(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("action")
 
 	w.Header().Set("Content-Type", "application/json")
@@ -68,7 +71,7 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func addAction(w http.ResponseWriter, r *http.Request) {
+func AddAction(w http.ResponseWriter, r *http.Request) {
 	var nilEntry = Stat{}
 	var body ActionRequest
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -91,7 +94,7 @@ func addAction(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Success")
 }
 
-func removeAction(w http.ResponseWriter, r *http.Request) {
+func RemoveAction(w http.ResponseWriter, r *http.Request) {
 	var body DeleteResponse
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err == nil {
